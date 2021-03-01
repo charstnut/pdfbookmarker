@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """Add bookmarks to existing PDF files
 
 Usage:
@@ -47,13 +46,14 @@ def add_bookmarks(pdf_in_filename, bookmarks_tree, pdf_out_filename=None):
     pdf_out.append(pdf_in, import_bookmarks=False)
 
     # copy/preserve existing document info
-    doc_info = pdf_in.getDocumentInfo()
-    if doc_info:
-        pdf_out.addMetadata(doc_info)
+    # doc_info = pdf_in.getDocumentInfo()
+    # if doc_info:
+    #     pdf_out.addMetadata(doc_info)
 
     def crawl_tree(tree, parent):
         for title, page_num, subtree in tree:
-            current = pdf_out.addBookmark(title, page_num, parent) # add parent bookmark
+            current = pdf_out.addBookmark(title, page_num,
+                                          parent)  # add parent bookmark
             if subtree:
                 crawl_tree(subtree, current)
 
@@ -111,7 +111,7 @@ def get_bookmarks_tree(bookmarks_filename):
     tree = []
 
     # the latest nodes (the old node will be replaced by a new one if they have the same level)
-    # 
+    #
     # each item (key, value) in dictionary represents a node
     # `key`: the level of the node
     # `value`: the children list of the node
@@ -127,10 +127,11 @@ def get_bookmarks_tree(bookmarks_filename):
             except ValueError:
                 pass
             continue
-        res = re.match(r'(\+*)\s*?"([^"]+)"\s*\|\s*(\d+)', line)
+        res = re.match("(\d*(?:\.\d*)*)\s*(.*);\s*(\d+)", line)
         if res:
-            pluses, title, page_num = res.groups()
-            cur_level = len(pluses)  # plus count stands for level
+            chapter, title, page_num = res.groups()
+            cur_level = chapter.count('.') + 1
+            # cur_level = len(pluses)  # plus count stands for level
             cur_node = (title, int(page_num) - 1 + offset, [])
 
             if not (0 < cur_level <= prev_level + 1):
@@ -150,7 +151,8 @@ def run_script(pdf_in_filename, bookmarks_filename, pdf_out_filename=None):
     sys.stderr.write('In processing, please wait...\n')
     try:
         bookmarks_tree = get_bookmarks_tree(bookmarks_filename)
-        pdf_out_filename = add_bookmarks(pdf_in_filename, bookmarks_tree, pdf_out_filename)
+        pdf_out_filename = add_bookmarks(pdf_in_filename, bookmarks_tree,
+                                         pdf_out_filename)
     except Exception as exc:
         sys.stderr.write("error:\n%s\n" % str(exc))
     else:
