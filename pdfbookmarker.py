@@ -132,10 +132,12 @@ def get_bookmarks_tree(bookmarks_filename):
             chapter, title, page_num = res.groups()
             cur_level = chapter.count('.') + 1
             # cur_level = len(pluses)  # plus count stands for level
+            # replace escaped characters as is
+            title = title.replace("\\", "")
             cur_node = (title, int(page_num) - 1 + offset, [])
 
             if not (0 < cur_level <= prev_level + 1):
-                raise Exception('plus (+) count is invalid here: %s' % line)
+                raise Exception('Level count is invalid here: %s' % line)
             else:
                 # append the current node into its parent node (with the level `cur_level` - 1)
                 latest_nodes[cur_level - 1].append(cur_node)
